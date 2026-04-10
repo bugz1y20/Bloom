@@ -19,10 +19,14 @@ auth.onAuthStateChanged(function(user) {
   if (user || isGuest) {
     loginScreen.hidden = true;
     appShell.hidden    = false;
+    appShell.classList.add('ready');
+    loginScreen.classList.remove('ready');
     showScrollHint();
   } else {
     loginScreen.hidden = false;
     appShell.hidden    = true;
+    loginScreen.classList.add('ready');
+    appShell.classList.remove('ready');
   }
 });
 

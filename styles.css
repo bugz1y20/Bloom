@@ -98,9 +98,9 @@ code {
 .hero {
   position: relative;
   display: grid;
-  grid-template-columns: 1.35fr 0.92fr;
-  gap: 24px;
-  padding: 32px;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding: 24px 28px;
   animation: rise-in 0.7s ease-out both;
 }
 
@@ -115,7 +115,7 @@ code {
 
 .hero-copy h1 {
   max-width: 10ch;
-  font-size: clamp(2.7rem, 6vw, 5rem);
+  font-size: clamp(2rem, 4vw, 3rem);
 }
 
 .hero-text,
@@ -129,7 +129,8 @@ code {
 
 .hero-text {
   max-width: 62ch;
-  margin: 18px 0 0;
+  margin: 8px 0 0;
+  font-size: 0.88rem;
 }
 
 .eyebrow {
@@ -235,12 +236,12 @@ code {
 .stack,
 .stack-tight {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .radial-card,
 .rate-card {
-  padding: 22px;
+  padding: 16px;
   border-radius: var(--radius-lg);
 }
 
@@ -262,10 +263,10 @@ code {
 
 .budget-ring {
   --progress: 0deg;
-  width: min(250px, 100%);
+  width: min(180px, 100%);
   aspect-ratio: 1;
   margin: 0 auto;
-  padding: 18px;
+  padding: 14px;
   border-radius: 50%;
   background:
     conic-gradient(var(--accent) 0deg, var(--gold) var(--progress), rgba(234, 224, 214, 0.9) var(--progress), rgba(234, 224, 214, 0.9) 360deg);
@@ -290,7 +291,7 @@ code {
 }
 
 .budget-ring-inner strong {
-  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
 }
 
 .mini-stats,
@@ -908,6 +909,18 @@ body.modal-open {
 }
 
 /* ── Login screen ─────────────────────────────────────────────────────────── */
+/* Hide both screens until auth resolves — prevents login flash */
+#login-screen,
+#app-shell {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+#login-screen.ready,
+#app-shell.ready {
+  opacity: 1;
+}
+
 .login-screen {
   min-height: 100vh;
   display: flex;
