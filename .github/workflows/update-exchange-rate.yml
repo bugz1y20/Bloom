@@ -1,0 +1,44 @@
+name: Update Exchange Rate
+
+on:
+  schedule:
+    # Runs every day at 08:00 UTC (10:00 CAT)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  update-rate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch latest BoZ exchange rate
+        run: python tools/fetch_boz_rate.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet data/exchange-rate.generated.js && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit updated rate
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/exchange-rate.generated.js
+          git commit -m "chore: update BoZ exchange rate $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Install Firebase CLI
+        if: steps.changes.outputs.changed == 'true'
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        if: steps.changes.outputs.changed == 'true'
+        run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Export Bloom Budget Data</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0;
+      background: linear-gradient(135deg, #fdf6ee, #f5ece0);
+      color: #2c221d;
+    }
+    .box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 36px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(84,55,34,0.12);
+      text-align: center;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p  { color: #7a6558; margin: 0 0 24px; font-size: 0.95rem; }
+    .status { font-weight: 600; font-size: 1rem; margin-top: 16px; }
+    .ok  { color: #4a7c4e; }
+    .err { color: #9f4d2d; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h1>Bloom Budget — Data Export</h1>
+  <p>Open this file in the same browser you use for Bloom Budget on your PC.</p>
+  <p id="status" class="status"></p>
+</div>
+<script>
+  const status = document.getElementById('status');
+  const data = localStorage.getItem('bloom-budget-state-v2');
+
+  if (!data) {
+    status.className = 'status err';
+    status.textContent = 'No data found. Make sure you open this in the same browser where you use Bloom Budget.';
+  } else {
+    // Auto-download
+    const blob = new Blob([data], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'bloom-budget-data.json';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+
+    status.className = 'status ok';
+    status.textContent = '✓ bloom-budget-data.json downloaded. You can close this tab.';
+  }
+</script>
+</body>
+</html>

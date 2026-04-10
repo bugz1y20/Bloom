@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloom Budget</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c86b41">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bloom Budget">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── Login screen ─────────────────────────────────────────────────────── -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <p class="eyebrow">Welcome back</p>
+      <h1 class="login-title">Bloom Budget</h1>
+      <form id="login-form" novalidate>
+        <label class="field">
+          <span>Email</span>
+          <input id="login-email" type="email" autocomplete="email" placeholder="you@email.com" required>
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </label>
+        <p id="login-error" class="login-error" aria-live="polite"></p>
+        <button class="primary-btn login-btn" type="submit"><span class="btn-label">Sign in</span></button>
+      </form>
+      <div class="login-divider"><span>or</span></div>
+      <button id="guestBtn" class="ghost-btn guest-btn" type="button">Try as Guest</button>
+    </div>
+  </div>
+
+  <!-- ── App ──────────────────────────────────────────────────────────────── -->
+  <div id="app-shell" hidden>
+  <div class="page-shell">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="hero card">
+      <button id="openSettingsBtn" class="settings-trigger" aria-label="Open settings" title="Settings">⚙</button>
+      <div class="hero-copy">
+        <p class="eyebrow">Budget tracker and expense planner</p>
+        <h1>Plan in kwacha, track in dollars too.</h1>
+        <p class="hero-text">
+          Keep budgets in one place, enter amounts in either Zambian kwacha or US dollars, and convert everything with the latest locally cached Bank of Zambia rate.
+        </p>
+      </div>
+
+      <div class="hero-panel stack-tight">
+        <article class="radial-card">
+          <p>Budget pressure</p>
+          <div id="budgetRing" class="budget-ring">
+            <div class="budget-ring-inner">
+              <strong id="spentRatio">0%</strong>
+              <span>of target used</span>
+            </div>
+          </div>
+          <div class="mini-stats">
+            <div>
+              <span>Left to spend</span>
+              <strong id="remainingBudget">K0</strong>
+            </div>
+            <div>
+              <span>Planned soon</span>
+              <strong id="plannedSoon">K0</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="rate-card">
+          <div class="section-head compact-head">
+            <div>
+              <p class="eyebrow">Exchange rate</p>
+              <h2>Bank of Zambia</h2>
+            </div>
+          </div>
+          <strong id="rateHeadline">1 USD = K0</strong>
+          <p id="rateDetails" class="helper-copy">No exchange-rate file loaded yet.</p>
+          <div class="rate-grid">
+            <div>
+              <span>Buying</span>
+              <strong id="buyRate">K0</strong>
+            </div>
+            <div>
+              <span>Mid-rate</span>
+              <strong id="midRate">K0</strong>
+            </div>
+            <div>
+              <span>Selling</span>
+              <strong id="sellRate">K0</strong>
+            </div>
+          </div>
+          <p class="pipeline-note">Refresh locally with <code>powershell -ExecutionPolicy Bypass -File .\tools\run_rate_pipeline.ps1</code></p>
+        </article>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="summary-grid">
+        <article class="summary-card card">
+          <span class="summary-label">Net balance</span>
+          <strong id="netBalance">K0</strong>
+          <p id="balanceHint">Start recording income and expenses.</p>
+        </article>
+
+        <article class="summary-card card">
+          <span class="summary-label">Savings progress</span>
+          <strong id="savedAmount">K0</strong>
+          <p id="savingsHint">No savings target yet.</p>
+        </article>
+
+        <article class="summary-card card">
+          <span class="summary-label">Upcoming bills</span>
+          <strong id="upcomingCount">0 items</strong>
+          <p id="upcomingHint">Nothing due in the next 14 days.</p>
+        </article>
+
+        <article class="summary-card card accent-card">
+          <span class="summary-label">Smart nudge</span>
+          <strong id="nudgeTitle">Set your targets</strong>
+          <p id="nudgeText">Save your monthly income and savings target to unlock clearer guidance.</p>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <section class="stack">
+          <article class="card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Cash flow</p>
+                <h2>Recent activity</h2>
+              </div>
+            </div>
+            <input id="importFileInput" type="file" accept=".json" hidden>
+
+            <form id="transactionForm" class="form-grid form-grid-transaction">
+              <label class="field">
+                <span>Label</span>
+                <input name="title" type="text" placeholder="School fees" required>
+              </label>
+
+              <label class="field">
+                <span>Amount</span>
+                <input name="amount" type="number" min="0.01" step="0.01" placeholder="1200" required>
+              </label>
+
+              <label class="field">
+                <span>Currency</span>
+                <select name="currency">
+                  <option value="ZMW">ZMW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Type</span>
+                <select name="type">
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Category <button type="button" id="autoCategoryBtn" class="auto-cat-btn" title="Auto-detect category from label">✨ auto</button></span>
+                <select name="category">
+                  <option>Housing</option>
+                  <option>Food</option>
+                  <option>Transport</option>
+                  <option>Lifestyle</option>
+                  <option>Utilities</option>
+                  <option>Income</option>
+                  <option>Other</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Date</span>
+                <input name="date" type="date" required>
+              </label>
+
+              <button class="primary-btn submit-btn" type="submit">Add transaction</button>
+            </form>
+
+            <div id="transactionList" class="transaction-list"></div>
+          </article>
+
+          <article class="card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Planner</p>
+                <h2>Upcoming expenses</h2>
+              </div>
+            </div>
+
+            <form id="planForm" class="form-grid">
+              <label class="field">
+                <span>Expense</span>
+                <input name="name" type="text" placeholder="Generator service" required>
+              </label>
+
+              <label class="field">
+                <span>Amount</span>
+                <input name="amount" type="number" min="0.01" step="0.01" placeholder="450" required>
+              </label>
+
+              <label class="field">
+                <span>Currency</span>
+                <select name="currency">
+                  <option value="ZMW">ZMW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Due date</span>
+                <input name="dueDate" type="date" required>
+              </label>
+
+              <label class="field">
+                <span>Priority</span>
+                <select name="priority">
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </label>
+
+              <button class="secondary-btn submit-btn" type="submit">Add plan</button>
+            </form>
+
+            <div id="planList" class="plan-list"></div>
+          </article>
+        </section>
+
+        <section class="stack">
+          <article class="card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Spending map</p>
+                <h2>Category budgets</h2>
+              </div>
+            </div>
+            <div id="categoryBudgets" class="category-grid"></div>
+          </article>
+
+          <article class="card insights-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Weekly rhythm</p>
+                <h2>Expense outlook</h2>
+              </div>
+            </div>
+            <div id="weeklyPlanner" class="weekly-planner"></div>
+          </article>
+
+          <article class="card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Reflections</p>
+                <h2>My Journal</h2>
+              </div>
+            </div>
+            <form id="journalForm" class="journal-form">
+              <label class="field">
+                <span>Date</span>
+                <input name="date" type="date" required>
+              </label>
+              <label class="field">
+                <span>Entry</span>
+                <textarea name="content" placeholder="Write your thoughts, budget notes, or financial goals…" rows="3" required></textarea>
+              </label>
+              <button class="secondary-btn submit-btn" type="submit">Add entry</button>
+            </form>
+            <div id="journalList" class="journal-list"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="transactionTemplate">
+    <article class="transaction-item">
+      <div>
+        <strong class="item-title"></strong>
+        <p class="item-meta"></p>
+      </div>
+      <div class="item-actions">
+        <div class="amount-stack">
+          <strong class="item-amount"></strong>
+          <span class="amount-secondary"></span>
+        </div>
+        <button class="icon-btn" type="button" aria-label="Delete item">×</button>
+      </div>
+    </article>
+  </template>
+
+  <template id="planTemplate">
+    <article class="plan-item">
+      <div>
+        <div class="plan-topline">
+          <strong class="item-title"></strong>
+          <span class="priority-pill"></span>
+        </div>
+        <p class="item-meta"></p>
+      </div>
+      <div class="item-actions">
+        <div class="amount-stack">
+          <strong class="item-amount"></strong>
+          <span class="amount-secondary"></span>
+        </div>
+        <button class="icon-btn" type="button" aria-label="Delete planned expense">×</button>
+      </div>
+    </article>
+  </template>
+
+  <!-- ── Settings modal ──────────────────────────────────────────────────── -->
+  <div id="settings-modal" class="modal-backdrop" hidden aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Configuration</p>
+          <h2 class="modal-title">Settings</h2>
+        </div>
+        <button id="closeSettingsBtn" class="icon-btn" aria-label="Close settings">×</button>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-label">Income</p>
+        <div class="settings-row">
+          <label class="field compact-field">
+            <span>Monthly income target</span>
+            <input id="incomeInput" type="number" min="0" step="0.01" placeholder="15000">
+          </label>
+          <label class="field compact-field">
+            <span>Currency</span>
+            <select id="incomeCurrencySelect">
+              <option value="ZMW">ZMW</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-label">Savings</p>
+        <div class="settings-row">
+          <label class="field compact-field">
+            <span>Savings target</span>
+            <input id="savingsInput" type="number" min="0" step="0.01" placeholder="2500">
+          </label>
+          <label class="field compact-field">
+            <span>Currency</span>
+            <select id="savingsCurrencySelect">
+              <option value="ZMW">ZMW</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-label">Display</p>
+        <div class="settings-row">
+          <label class="field compact-field">
+            <span>Display currency</span>
+            <select id="displayCurrencySelect">
+              <option value="ZMW">ZMW</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <button id="saveTargetsBtn" class="primary-btn settings-save-btn">Save settings</button>
+
+      <div class="settings-divider"></div>
+
+      <div class="settings-section">
+        <p class="settings-label">Data</p>
+        <div class="settings-data-actions">
+          <button id="exportDataBtn" class="ghost-btn">Export data</button>
+          <button id="importDataBtn" class="ghost-btn">Import data</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-label danger-label">Danger zone</p>
+        <div class="settings-data-actions">
+          <button id="clearDataBtn" class="danger-btn">Clear all data</button>
+          <button id="logoutBtn" class="danger-btn outline">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /#app-shell -->
+
+  <!-- Firebase v9 compat SDK (works as plain scripts, no bundler needed) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="data/exchange-rate.generated.js"></script>
+  <script src="script.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

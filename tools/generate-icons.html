@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Bloom Budget Icons</title></head>
+<body>
+<p>Open this file in a browser. Both icons will download automatically.</p>
+<script>
+[192, 512].forEach(function(size) {
+  var canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  var ctx = canvas.getContext('2d');
+
+  // Copper background
+  ctx.fillStyle = '#c86b41';
+  ctx.fillRect(0, 0, size, size);
+
+  // White serif "B"
+  ctx.fillStyle = '#fffaf7';
+  ctx.font = 'bold ' + Math.round(size * 0.58) + 'px Georgia, "Palatino Linotype", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('B', size / 2, size / 2 + size * 0.03);
+
+  var a = document.createElement('a');
+  a.download = 'icon-' + size + '.png';
+  a.href = canvas.toDataURL('image/png');
+  document.body.appendChild(a);
+  a.click();
+});
+</script>
+</body>
+</html>
